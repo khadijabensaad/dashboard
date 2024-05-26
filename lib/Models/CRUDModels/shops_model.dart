@@ -9,8 +9,8 @@ class ShopModel {
   List<dynamic> products;
   String id;
   String name;
-  //DateTime createdAt;
-  //DateTime updatedAt;
+  DateTime createdAt;
+  DateTime updatedAt;
   int v;
   String city;
   String region;
@@ -20,8 +20,8 @@ class ShopModel {
     required this.products,
     required this.id,
     required this.name,
-    //required this.createdAt,
-    //required this.updatedAt,
+    required this.createdAt,
+    required this.updatedAt,
     required this.v,
     required this.city,
     required this.region,
@@ -32,8 +32,8 @@ class ShopModel {
         products: List<dynamic>.from(json["products"].map((x) => x)),
         id: json["_id"],
         name: json["name"],
-        //   createdAt: DateTime.parse(json["createdAt"]),
-        // updatedAt: DateTime.parse(json["updatedAt"]),
+        createdAt: DateTime.parse(json["createdAt"]),
+        updatedAt: DateTime.parse(json["updatedAt"]),
         v: json["__v"],
         city: json["city"],
         region: json["region"],
@@ -44,8 +44,8 @@ class ShopModel {
         "products": List<dynamic>.from(products.map((x) => x)),
         "_id": id,
         "name": name,
-        // "createdAt": createdAt.toIso8601String(),
-        // "updatedAt": updatedAt.toIso8601String(),
+        "createdAt": createdAt.toIso8601String(),
+        "updatedAt": updatedAt.toIso8601String(),
         "__v": v,
         "city": city,
         "region": region,

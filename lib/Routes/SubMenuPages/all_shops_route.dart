@@ -1,14 +1,18 @@
-import 'package:admintest/Controllers/CRUDControllers/shops_api.dart';
-import 'package:admintest/Models/CRUDModels/shops_model.dart';
-import 'package:admintest/Widgets/CRUDWidgets/add_shop_page.dart';
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import '../../Controllers/CRUDControllers/shops_api.dart';
+import '../../Models/CRUDModels/shops_model.dart';
+import '../../Widgets/CRUDWidgets/add_shop_page.dart';
 import '../../Widgets/appbarwideget.dart';
-import '../../Widgets/header_widget.dart';
 import '../../constants/const_colors.dart';
+import 'package:http/http.dart' as http;
 
 class ShopsRoute extends StatefulWidget {
-  ShopsRoute({super.key});
+  final List<String> shops;
+  const ShopsRoute({super.key, required this.shops});
 
   @override
   State<ShopsRoute> createState() => _ShopsRouteState();
@@ -16,7 +20,7 @@ class ShopsRoute extends StatefulWidget {
 
 class _ShopsRouteState extends State<ShopsRoute> {
   final ShopApiCall apiShopsCall = ShopApiCall();
-
+  String message = '';
   TextEditingController _searchController = TextEditingController();
 
   String minimizeTitle(String title) {
@@ -36,43 +40,39 @@ class _ShopsRouteState extends State<ShopsRoute> {
     super.dispose();
   }
 
+  Future<void> deleteShop(String id) async {
+    try {
+      //na7ina il const khater l'id variable
+      String url = "http://192.168.1.113:5000/shops/deleteShop/${id}";
+      final resp = await http.delete(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8'
+        },
+      );
+      if (resp.statusCode == 200) {
+        print("succes shop deleted");
+        var jsonResponse = jsonDecode(resp.body);
+        setState(() {
+          message = jsonResponse;
+        });
+      } else {
+        print("failed");
+      }
+    } catch (e) {
+      print("echec: ${e}");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppBarWidget(title: "All Shops"),
       backgroundColor: backgoundColor,
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      appBar: const AppBarWidget(title: "All Shops"),
+      body: SafeArea(
         child: Column(
           children: [
-            HeaderWidget(scaffoldContext: context, cntrl: _searchController),
-            const SizedBox(height: 10),
-            /* Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                InkWell(
-                  child: const Icon(
-                    CupertinoIcons.arrow_left,
-                    size: 20,
-                    color: orange,
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                const SizedBox(height: 10),
-                /*   const Text(
-                  '4 RÉSULTATS TROUVÉS',
-                  style: TextStyle(
-                    color: orange,
-                    fontSize: 13,
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),*/
-              ],
-            ),*/
-            const SizedBox(height: 7),
+            const SizedBox(height: 20),
             Expanded(
               child: FutureBuilder<List<ShopModel>>(
                 future: apiShopsCall.getAllShops(),
@@ -85,32 +85,12 @@ class _ShopsRouteState extends State<ShopsRoute> {
                     return ListView.separated(
                       itemBuilder: (context, index) {
                         return InkWell(
-                          onTap: () {
-                            // Get.to(() => ProductDetails(
-                            //   product: snapshot.data!,
-                            //   index: index,
-                            //   currencySign: '',
-                            //   price: '.',
-                            // ));
-                          },
+                          onTap: () {},
                           child: Container(
                             height: 85,
                             margin: const EdgeInsets.all(10),
                             child: Row(
                               children: [
-                                /*  Container(
-                                  clipBehavior: Clip.antiAlias,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Image.network(
-                                    // snapshot.data![index].thumbnail,
-                                    "http://192.168.0.179:5000/shops/getAllShops/${snapshot.data![index].coordinates}",
-                                    height: 100,
-                                    width: 110,
-                                    fit: BoxFit.fill,
-                                  ),
-                                ),*/
                                 Expanded(
                                   child: Padding(
                                     padding: const EdgeInsets.only(
@@ -174,6 +154,106 @@ class _ShopsRouteState extends State<ShopsRoute> {
                                     shape: CircleBorder(),
                                   ),
                                 ),
+                                const SizedBox(
+                                  width: 17,
+                                ),
+                                InkWell(
+                                  onTap: () {
+                                    String? id = snapshot.data![index].id;
+                                    if (id != null) {
+                                      showDialog(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                                icon: const Icon(
+                                                    Icons.warning_amber_rounded,
+                                                    size: 50),
+                                                iconColor: Color(0xFF965D1A),
+                                                backgroundColor:
+                                                    Color(0xFFFDF1E1),
+                                                title: const Text(
+                                                  'Delete All Shops',
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontFamily: 'Poppins',
+                                                      color: Colors.black,
+                                                      fontSize: 20),
+                                                ),
+                                                content: const Text(
+                                                  'If you delete this shop, you will delete all its products!!!',
+                                                  style: TextStyle(
+                                                      fontFamily: 'Poppins',
+                                                      color: Colors.red,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                                actions: <Widget>[
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      Navigator.of(context)
+                                                          .pop();
+
+                                                      // Close the dialog after deletion
+                                                    },
+                                                    child: const Text('Cancel',
+                                                        style: TextStyle(
+                                                            fontFamily:
+                                                                'Poppins',
+                                                            color: Color(
+                                                                0xFF965D1A),
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold)),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () async {
+                                                      setState(() {
+                                                        deleteShop(id)
+                                                            .whenComplete(() =>
+                                                                Fluttertoast
+                                                                    .showToast(
+                                                                  msg: message,
+                                                                  toastLength: Toast
+                                                                      .LENGTH_SHORT,
+                                                                  backgroundColor: Colors
+                                                                      .black
+                                                                      .withOpacity(
+                                                                          0.7),
+                                                                ));
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      });
+                                                      // Close the dialog after deletion
+                                                    },
+                                                    child: const Text('Delete',
+                                                        style: TextStyle(
+                                                            fontFamily:
+                                                                'Poppins',
+                                                            color: Color(
+                                                                0xFF965D1A),
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold)),
+                                                  ),
+                                                ],
+                                              ));
+                                    } else {
+                                      print("No Shop id");
+                                    }
+                                  },
+                                  child: Container(
+                                    width: 37,
+                                    height: 37,
+                                    child: Icon(
+                                      CupertinoIcons.delete,
+                                      color: Colors.white,
+                                    ),
+                                    decoration: const ShapeDecoration(
+                                      color: orange,
+                                      shape: CircleBorder(),
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -191,7 +271,7 @@ class _ShopsRouteState extends State<ShopsRoute> {
             ),
             InkWell(
               onTap: () {
-                Scaffold.of(context).openDrawer(); // Open the drawer
+                Scaffold.of(context).openDrawer();
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const AddShops(),

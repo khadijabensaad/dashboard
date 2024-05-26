@@ -1,8 +1,169 @@
 import 'dart:io';
+
+import 'package:admintest/Models/CRUDModels/product_data_model.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import '../../Models/product_filter_model.dart';
+
+class ProductApiCall {
+  late SharedPreferences prefs;
+
+  ProductApiCall() {
+    initSharedPref(); // Call initSharedPref in the constructor
+  }
+
+  Future<void> initSharedPref() async {
+    prefs = await SharedPreferences.getInstance();
+  }
+
+  Future<List<ProductModel>> searchProductsWithFilter(
+      ProductFilter filtre) async {
+    await initSharedPref();
+    List<ProductModel> products = [];
+    var token = prefs.getString("userToken");
+    try {
+      const String url =
+          "http://192.168.1.113:5000/products/searchProductsWithFilter";
+
+      final http.Response resp = await http.post(Uri.parse(url),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer ${token}'
+          },
+          body: jsonEncode(filtre.toJson()));
+
+      if (resp.statusCode == 200) {
+        /*print("name ${filtre.name}");
+      
+      print("colors ${filtre.colors}");
+      print("sortBy ${filtre.sortBy}");
+      print("sortOrder ${filtre.sortOrder}");
+      print("region ${filtre.region}");
+      print("size: ${filtre.size}");*/
+        List<dynamic> jsonResponse = json.decode(resp.body);
+        print(jsonResponse);
+        products =
+            jsonResponse.map((item) => ProductModel.fromJson(item)).toList();
+        //print("${products.length} Products recieved");
+        //print("${resp.body}");
+
+        return products;
+      } else {
+        print("failed: ${resp.statusCode}");
+      }
+    } catch (error) {
+      print("erreur: ${error}");
+    }
+    return [];
+  }
+
+  Future<ProductModel> getProductById(String identifier) async {
+    await initSharedPref();
+    ProductModel product;
+    var token = prefs.getString("userToken");
+    try {
+      String url =
+          "http://192.168.1.113:5000/products/getProduct/${identifier}";
+      final http.Response resp = await http.get(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer ${token}'
+        },
+      );
+      if (resp.statusCode == 200) {
+        dynamic jsonResponse = json.decode(resp.body);
+        product = ProductModel.fromJson(jsonResponse);
+        print("succes getProductById");
+        return product;
+      } else {
+        print("failure: ${resp.statusCode}");
+      }
+    } catch (error) {
+      print("$error");
+      throw Exception('Request failed .. $error');
+    }
+    throw Exception('Request failed.');
+  }
+
+  Future<void> addProduct(ProductModel product, List<File> images) async {
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse("http://192.168.1.113:5000/products/addProduct"),
+      );
+
+      // Add product data to the request
+      request.fields['name'] = product.name;
+      request.fields['price'] = product.price.toString();
+      request.fields['rating'] = product.rating.toString();
+      request.fields['barcode'] = product.barcode.toString();
+      request.fields['colors'] = product.colors.join(',');
+      request.fields['description'] = product.description;
+      request.fields['size'] = product.size.toString();
+      request.fields['brand_id'] = product.brand;
+
+      // Add the thumbnail file to the request
+      var thumbnailFile = http.MultipartFile.fromString(
+        'thumbnail',
+        product
+            .thumbnail, // Assuming thumbnail is a String representing the file path
+      );
+      request.files.add(thumbnailFile);
+
+      // Add the images files to the request
+      for (var image in images) {
+        var imageFile = http.MultipartFile.fromString(
+          'images',
+          base64Encode(await image.readAsBytes()),
+        );
+        request.files.add(imageFile);
+      }
+
+      // Send the request
+      var streamedResponse = await request.send();
+
+      // Process the response
+      final resp = await http.Response.fromStream(streamedResponse);
+
+      if (resp.statusCode == 200 || resp.statusCode == 201) {
+        print("success");
+      } else {
+        print("echec: ${resp.statusCode}");
+      }
+    } catch (error) {
+      print("erreur: ${error}");
+    }
+  }
+}
+
+//////////////
+
+Future<void> addProduct(ProductModel product) async {
+  try {
+    const String url = "http://192.168.1.113:5000/products/addProduct";
+    //var headers = {'Content-Type': 'application/json; charset=UTF-8'};
+    final resp = await http.post(Uri.parse(url),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8'
+        },
+        //khater l'ajout de user
+        body: jsonEncode(product.toJson()));
+
+    if (resp.statusCode == 200 || resp.statusCode == 201) {
+      print("success");
+    } else {
+      print("echec: ${resp.statusCode}");
+    }
+  } catch (error) {
+    print("erreur: ${error}");
+  }
+}
+/*import 'dart:io';
 import 'package:admintest/Models/CRUDModels/product_data_model.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
 import '../../Models/product_filter_model.dart';
 
 class ProductApiCall {
@@ -11,7 +172,7 @@ class ProductApiCall {
     List<ProductModel> products = [];
     try {
       const String url =
-          "http://192.168.1.15:5000/products/searchProductsWithFilter";
+          "http://192.168.1.113:5000/products/searchProductsWithFilter";
       final http.Response resp = await http.post(Uri.parse(url),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8'
@@ -43,7 +204,7 @@ class ProductApiCall {
 
   Future<List<ProductModel>> getAll() async {
     List<ProductModel> products = [];
-    const String url = "http://192.168.0.179:5000/products/getAllProducts";
+    const String url = "http://192.168.1.113:5000/products/getAllProducts";
     final http.Response resp = await http.get(Uri.parse(url));
     if (resp.statusCode == 200) {
       // Decode the JSON response
@@ -62,7 +223,7 @@ class ProductApiCall {
   Future<ProductModel?> getProductById(String productId) async {
     ProductModel? product; // Déclarer la variable product comme nullable
     final String url =
-        "http://192.168.0.179:5000/products/getProduct/$productId";
+        "http://192.168.1.113:5000/products/getProduct/$productId";
     final http.Response resp = await http.get(Uri.parse(url));
     if (resp.statusCode == 200) {
       // Decode the JSON response
@@ -81,7 +242,7 @@ class ProductApiCall {
     ProductModel product;
     try {
       String url =
-          "http://192.168.0.179:5000/products/getProductByBarCode?barcode=${identifier}";
+          "http://192.168.1.113:5000/products/getProductByBarCode?barcode=${identifier}";
       final http.Response resp = await http.get(
         Uri.parse(url),
         headers: <String, String>{
@@ -143,7 +304,7 @@ class ProductApiCall {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse("http://192.168.0.179:5000/products/addProduct"),
+        Uri.parse("http://192.168.1.113:5000/products/addProduct"),
       );
 
       // Add product data to the request
@@ -157,7 +318,7 @@ class ProductApiCall {
       request.fields['brand_id'] = product.brand;
 
       // Add the thumbnail file to the request
-      var thumbnailFile = await http.MultipartFile.fromPath(
+      var thumbnailFile = http.MultipartFile.fromString(
         'thumbnail',
         product
             .thumbnail, // Assuming thumbnail is a String representing the file path
@@ -166,7 +327,10 @@ class ProductApiCall {
 
       // Add the images files to the request
       for (var image in images) {
-        var imageFile = await http.MultipartFile.fromPath('images', image.path);
+        var imageFile = http.MultipartFile.fromString(
+          'images',
+          base64Encode(await image.readAsBytes()),
+        );
         request.files.add(imageFile);
       }
 
@@ -188,11 +352,11 @@ class ProductApiCall {
 }
 
 
-  //
+  //////////////
 
-  /*Future<void> addProduct(ProductModel product) async {
+  Future<void> addProduct(ProductModel product) async {
     try {
-      const String url = "http://192.168.0.179:5000/products/addProduct";
+      const String url = "http://192.168.1.113:5000/products/addProduct";
       //var headers = {'Content-Type': 'application/json; charset=UTF-8'};
       final resp = await http.post(Uri.parse(url),
           headers: <String, String>{

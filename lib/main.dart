@@ -1,5 +1,4 @@
-import 'package:admintest/util/main_screen_responsive.dart';
-
+import 'package:admintest/Views/Auth/login.dart';
 import 'Controllers/navigation_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -46,7 +45,7 @@ class MyApp extends StatelessWidget {
         // useMaterial3: true,
       ),
       //  home: SearchFakeProducts(),
-      home: const MainScreenResponsive(),
+      home: const LoginPage(),
     );
   }
 }

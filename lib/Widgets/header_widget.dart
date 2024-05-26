@@ -4,11 +4,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class HeaderWidget extends StatefulWidget {
-     final TextEditingController cntrl;
+  final TextEditingController cntrl;
   final BuildContext scaffoldContext;
   //const HeaderWidget({super.key});
- 
-   HeaderWidget({Key? key, required this.scaffoldContext,required this.cntrl})
+
+  HeaderWidget({Key? key, required this.scaffoldContext, required this.cntrl})
       : super(key: key);
 
   @override
@@ -45,7 +45,7 @@ class _HeaderWidgetState extends State<HeaderWidget> {
         if (!ResponsiveUI.isMobile(context))
           Expanded(
             child: TextField(
-               controller: widget.cntrl,
+              controller: widget.cntrl,
               cursorColor: orange,
               style: const TextStyle(
                   fontFamily: 'Poppins', fontWeight: FontWeight.w600),

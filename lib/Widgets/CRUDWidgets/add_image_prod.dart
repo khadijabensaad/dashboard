@@ -3,9 +3,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 //import 'package:image_cropper/image_cropper.dart';
 import '../../constants/const_colors.dart';
+import 'images_cloudinary_urls.dart';
 
 class AddImageProd extends StatefulWidget {
   const AddImageProd({super.key});
@@ -161,19 +163,44 @@ class _AddImageProdState extends State<AddImageProd> {
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: GridView.builder(
-                itemCount: imageFileList.length,
-                //itemCount: imageFileList!.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                ),
-                itemBuilder: (BuildContext context, int index) {
-                  return Image.file(
-                    File(imageFileList[index].path),
-                    fit: BoxFit.cover,
-                  );
-                }),
+              itemCount: imageFileList.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+              ),
+              itemBuilder: (BuildContext context, int index) {
+                return kIsWeb
+                    ? Image.network(
+                        imageFileList[index]
+                            .path, // Assuming imageFileList contains URLs for web
+                        fit: BoxFit.cover,
+                      )
+                    : Image.file(
+                        File(imageFileList[index].path),
+                        fit: BoxFit.cover,
+                      );
+              },
+            ),
           ),
         )
+        /*    SizedBox(
+          height: 600,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: GridView.builder(     
+              itemCount: ImageCloudinaryURLs.imageURLs.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+              ),
+              itemBuilder: (BuildContext context, int index) {
+                return Image.network(
+                  ImageCloudinaryURLs
+                      .imageURLs[index], // URL of image hosted on Cloudinary
+                  fit: BoxFit.cover,
+                );
+              },
+            ),
+          ),
+        )*/
       ],
     );
   }

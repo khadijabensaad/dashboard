@@ -5,7 +5,7 @@ import 'dart:convert';
 class ShopApiCall {
   Future<List<ShopModel>> getAllShops() async {
     List<ShopModel> shops = [];
-    const String url = "http://192.168.0.179:5000/shops/getAllShops";
+    const String url = "http://192.168.1.113:5000/shops/getAllShops";
     final http.Response resp = await http.get(Uri.parse(url));
     if (resp.statusCode == 200) {
       // Decode the JSON response
@@ -23,7 +23,7 @@ class ShopApiCall {
   Future<dynamic> getShopByName(String name) async {
     late ShopModel shop;
     try {
-      String url = "http://192.168.0.179:5000/shops/getShopByName?name=${name}";
+      String url = "http://192.168.1.113:5000/shops/getShopByName?name=${name}";
       final http.Response resp = await http.get(
         Uri.parse(url),
         headers: <String, String>{
@@ -47,10 +47,10 @@ class ShopApiCall {
       return null;
     }
   }
-
+/*
   Future<void> addShop(ShopModel shop) async {
     try {
-      const String url = "http://192.168.0.179:5000/shops/addShop";
+      const String url = "http://192.168.1.113:5000/shops/addShop";
       //var headers = {'Content-Type': 'application/json; charset=UTF-8'};
       final resp = await http.post(Uri.parse(url),
           headers: <String, String>{
@@ -70,7 +70,7 @@ class ShopApiCall {
 
   Future<void> updateShop(ShopModel shop, String id) async {
     try {
-      String url = "http://localhost:5000/shops/updateShop/${id}";
+      String url = "http://:5000/shops/updateShop/${id}";
       //var headers = {'Content-Type': 'application/json; charset=UTF-8'};
       final resp = await http.put(Uri.parse(url),
           headers: <String, String>{
@@ -85,25 +85,5 @@ class ShopApiCall {
     } catch (error) {
       print("erreur: ${error}");
     }
-  }
-
-  Future<void> deleteShop(String id) async {
-    try {
-      //na7ina il const khater l'id variable
-      String url = "http://192.168.0.179:5000/shops/deleteShop/${id}";
-      final resp = await http.delete(
-        Uri.parse(url),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8'
-        },
-      );
-      if (resp.statusCode == 200) {
-        print("succes");
-      } else {
-        print("failed");
-      }
-    } catch (e) {
-      print("echec: ${e}");
-    }
-  }
+  }*/
 }

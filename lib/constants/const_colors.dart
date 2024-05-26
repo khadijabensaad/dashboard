@@ -6,3 +6,4 @@ const backgoundColor = Color(0xFFFDF1E1);
 const darkBrown = Color(0xFF965D1A);
 const orange = Color(0xFFDF9A4F);
 const darkGrey = Color.fromARGB(255, 97, 84, 72);
+const boxColor = Color.fromARGB(255, 255, 220, 169);

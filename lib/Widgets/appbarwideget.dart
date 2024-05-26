@@ -1,3 +1,4 @@
+import 'package:admintest/constants/const_colors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -8,14 +9,14 @@ class AppBarWidget extends StatefulWidget implements PreferredSizeWidget {
   _AppBarWidgetState createState() => _AppBarWidgetState();
 
   @override
-  Size get preferredSize => Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
 
 class _AppBarWidgetState extends State<AppBarWidget> {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: const Color(0xFFFDF1E1),
+      backgroundColor: backgoundColor,
       leading: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

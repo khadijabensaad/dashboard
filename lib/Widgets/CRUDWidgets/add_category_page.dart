@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:admintest/Widgets/appbarwideget.dart';
 import 'package:admintest/constants/const_colors.dart';
 import 'package:flutter/material.dart';
-
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:http/http.dart' as http;
 import '../../Controllers/CRUDControllers/category_api.dart';
 import '../../Models/CRUDModels/categories_model.dart';
 
@@ -20,6 +23,82 @@ class _FormState extends State<AddCategory> {
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _updatedIdController = TextEditingController();
   final TextEditingController _updatedNameController = TextEditingController();
+  String message = '';
+  Future<void> updateCategory(CategoryModel category, String id) async {
+    try {
+      String url =
+          "http://192.168.1.113:5000/categories/updateCategoryName/${id}";
+      final http.Response resp = await http.put(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8'
+        },
+        body: jsonEncode(category.toJson()),
+      );
+
+      if (resp.statusCode == 200 || resp.statusCode == 201) {
+        print("Success: ${resp.body}");
+        var jsonResponse = jsonDecode(resp.body);
+        setState(() {
+          message = jsonResponse;
+        });
+      } else {
+        print("Failed with status code ${resp.statusCode}: ${resp.body}");
+      }
+    } catch (error) {
+      print("Error: $error");
+    }
+  }
+
+  Future<void> addCategory(CategoryModel category) async {
+    try {
+      const String url = "http://192.168.1.113:5000/categories/addCategory";
+      final http.Response resp = await http.post(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8'
+        },
+        body: jsonEncode(category.toJson()),
+      );
+
+      if (resp.statusCode == 200 || resp.statusCode == 201) {
+        print("Success: ${resp.body}");
+        var jsonResponse = jsonDecode(resp.body);
+        setState(() {
+          message = jsonResponse;
+        });
+      } else {
+        print("Failed with status code ${resp.statusCode}: ${resp.body}");
+      }
+    } catch (error) {
+      print("Error: $error");
+    }
+  }
+
+  /* Future<void> deleteCategory(String id) async {
+    try {
+      //na7ina il const khater l'id variable
+      String url = "http://192.168.1.113:5000/categories/deleteCategory/${id}";
+      final resp = await http.delete(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8'
+        },
+      );
+      if (resp.statusCode == 200) {
+        print("succes category deleted");
+        var jsonResponse = jsonDecode(resp.body);
+        setState(() {
+          message = jsonResponse;
+        });
+      } else {
+        print("failed");
+      }
+    } catch (e) {
+      print("echec: ${e}");
+    }
+  }*/
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -124,11 +203,19 @@ class _FormState extends State<AddCategory> {
                 onPressed: () {
                   if (_nameController.text.isNotEmpty) {
                     CategoryModel category = CategoryModel(
-                        name: _nameController.text,
-                        products: [_prodController.text],
-                        id: '');
+                      name: _nameController.text,
+                      products: [_prodController.text],
+                      id: '',
+                      createdAt: DateTime.now(),
+                      updatedAt: DateTime.now(),
+                    );
                     if (category != null) {
-                      categoryApiCall.addCategory(category);
+                      addCategory(category)
+                          .whenComplete(() => Fluttertoast.showToast(
+                                msg: message,
+                                toastLength: Toast.LENGTH_SHORT,
+                                backgroundColor: Colors.black.withOpacity(0.7),
+                              ));
                     } else {
                       print('Error: CategoryModel is null');
                     }
@@ -140,7 +227,7 @@ class _FormState extends State<AddCategory> {
               const SizedBox(
                 height: 30,
               ),
-              Padding(
+              /*Padding(
                 padding: const EdgeInsets.only(
                     left: 20, right: 20, bottom: 5, top: 5),
                 child: TextField(
@@ -194,13 +281,69 @@ class _FormState extends State<AddCategory> {
                 ),
                 onPressed: () {
                   if (_idController.text.isNotEmpty) {
-                    categoryApiCall.deleteCategory(_idController.text);
+                    showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                              icon: const Icon(Icons.warning_amber_rounded,
+                                  size: 50),
+                              iconColor: Color(0xFF965D1A),
+                              backgroundColor: Color(0xFFFDF1E1),
+                              title: const Text(
+                                'Delete Category',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Poppins',
+                                    color: Colors.black,
+                                    fontSize: 20),
+                              ),
+                              content: const Text(
+                                'If you delete this category, you will delete all its products!!!',
+                                style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              actions: <Widget>[
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                    // Close the dialog after deletion
+                                  },
+                                  child: const Text('Cancel',
+                                      style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          color: Color(0xFF965D1A),
+                                          fontWeight: FontWeight.bold)),
+                                ),
+                                TextButton(
+                                  onPressed: () async {
+                                    setState(() {
+                                      deleteCategory(_idController.text)
+                                          .whenComplete(() =>
+                                              Fluttertoast.showToast(
+                                                msg: message,
+                                                toastLength: Toast.LENGTH_SHORT,
+                                                backgroundColor: Colors.black
+                                                    .withOpacity(0.7),
+                                              ));
+                                      Navigator.of(context).pop();
+                                    });
+                                    // Close the dialog after deletion
+                                  },
+                                  child: const Text('Delete',
+                                      style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          color: Color(0xFF965D1A),
+                                          fontWeight: FontWeight.bold)),
+                                ),
+                              ],
+                            ));
                   }
                 },
               ),
               const SizedBox(
                 height: 30,
-              ),
+              ),*/
               Padding(
                 padding: const EdgeInsets.only(
                     left: 20, right: 20, bottom: 5, top: 5),
@@ -292,13 +435,21 @@ class _FormState extends State<AddCategory> {
                 ),
                 onPressed: () {
                   if (_updatedNameController.text.isNotEmpty) {
-                    categoryApiCall.updateCategory(
-                        CategoryModel(
-                          name: _updatedNameController.text,
-                          products: [_prodController.text],
-                          id: _updatedIdController.text,
-                        ),
-                        _updatedIdController.text);
+                    updateCategory(
+                            CategoryModel(
+                              name: _updatedNameController.text,
+                              products: [_prodController.text],
+                              id: _updatedIdController.text,
+                              createdAt: DateTime.now(),
+                              updatedAt: DateTime.now(),
+                              v: 0,
+                            ),
+                            _updatedIdController.text)
+                        .whenComplete(() => Fluttertoast.showToast(
+                              msg: message,
+                              toastLength: Toast.LENGTH_SHORT,
+                              backgroundColor: Colors.black.withOpacity(0.7),
+                            ));
                   }
                 },
               ),

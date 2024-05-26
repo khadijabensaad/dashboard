@@ -1,8 +1,11 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:admintest/Controllers/CRUDControllers/brands_api.dart';
 import 'package:admintest/Models/CRUDModels/brands_model.dart';
 import 'package:admintest/Widgets/appbarwideget.dart';
 import 'package:admintest/constants/const_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class AddBrands extends StatefulWidget {
   const AddBrands({super.key});
@@ -19,6 +22,79 @@ class _FormState extends State<AddBrands> {
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _updatedNameController = TextEditingController();
   final TextEditingController _updatedIdController = TextEditingController();
+  String message = '';
+  Future<void> updateBrand(BrandModel brand, String id) async {
+    try {
+      String url = "http://192.168.1.113:5000/brands/updateBrand/${id}";
+      //var headers = {'Content-Type': 'application/json; charset=UTF-8'};
+      final resp = await http.put(Uri.parse(url),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8'
+          },
+          body: jsonEncode(brand.toJson()));
+
+      if (resp.statusCode == 200 || resp.statusCode == 201) {
+        print("success brand updated");
+        var jsonResponse = jsonDecode(resp.body);
+        setState(() {
+          message = jsonResponse;
+        });
+      } else {
+        print("echec: ${resp.statusCode}");
+      }
+    } catch (error) {
+      print("erreur: ${error}");
+    }
+  }
+
+  Future<void> addBrand(BrandModel brand) async {
+    try {
+      const String url = "http://192.168.1.113:5000/brands/addBrand";
+      //var headers = {'Content-Type': 'application/json; charset=UTF-8'};
+      final resp = await http.post(Uri.parse(url),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8'
+          },
+          body: jsonEncode(brand.toJson()));
+
+      if (resp.statusCode == 200 || resp.statusCode == 201) {
+        print("success add Brand");
+        var jsonResponse = jsonDecode(resp.body);
+        setState(() {
+          message = jsonResponse;
+        });
+      } else {
+        print("echec: ${resp.statusCode}");
+      }
+    } catch (error) {
+      print("erreur: ${error}");
+    }
+  }
+/*
+  Future<void> deleteBrand(String id) async {
+    try {
+      //na7ina il const khater l'id variable
+      String url = "http://192.168.1.113:5000/brands/deleteBrand/${id}";
+      final resp = await http.delete(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8'
+        },
+      );
+      if (resp.statusCode == 200) {
+        print("succes brand deleted");
+        var jsonResponse = jsonDecode(resp.body);
+        setState(() {
+          message = jsonResponse;
+        });
+      } else {
+        print("failed");
+      }
+    } catch (e) {
+      print("echec: ${e}");
+    }
+  }*/
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -122,16 +198,21 @@ class _FormState extends State<AddBrands> {
                 ),
                 onPressed: () {
                   if (_nameController.text.isNotEmpty) {
-                    _brandApiCall.addBrand(BrandModel(
-                        name: _nameController.text,
-                        products: [_prodController.text]));
+                    addBrand(BrandModel(
+                            name: _nameController.text,
+                            products: [_prodController.text]))
+                        .whenComplete(() => Fluttertoast.showToast(
+                              msg: message,
+                              toastLength: Toast.LENGTH_SHORT,
+                              backgroundColor: Colors.black.withOpacity(0.7),
+                            ));
                   }
                 },
               ),
               const SizedBox(
                 height: 50,
               ),
-              Padding(
+              /*    Padding(
                 padding: const EdgeInsets.only(
                     left: 20, right: 20, bottom: 5, top: 5),
                 child: TextField(
@@ -185,10 +266,67 @@ class _FormState extends State<AddBrands> {
                 ),
                 onPressed: () {
                   if (_idController.text.isNotEmpty) {
-                    _brandApiCall.deleteBrand(_idController.text);
+                    showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                              icon: const Icon(Icons.warning_amber_rounded,
+                                  size: 50),
+                              iconColor: Color(0xFF965D1A),
+                              backgroundColor: Color(0xFFFDF1E1),
+                              title: const Text(
+                                'Delete All Brands',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Poppins',
+                                    color: Colors.black,
+                                    fontSize: 20),
+                              ),
+                              content: const Text(
+                                'If you delete this brand, you will delete all its products!!!',
+                                style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              actions: <Widget>[
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+
+                                    // Close the dialog after deletion
+                                  },
+                                  child: const Text('Cancel',
+                                      style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          color: Color(0xFF965D1A),
+                                          fontWeight: FontWeight.bold)),
+                                ),
+                                TextButton(
+                                  onPressed: () async {
+                                    setState(() {
+                                      deleteBrand(_idController.text)
+                                          .whenComplete(() =>
+                                              Fluttertoast.showToast(
+                                                msg: message,
+                                                toastLength: Toast.LENGTH_SHORT,
+                                                backgroundColor: Colors.black
+                                                    .withOpacity(0.7),
+                                              ));
+                                      Navigator.of(context).pop();
+                                    });
+                                    // Close the dialog after deletion
+                                  },
+                                  child: const Text('Delete',
+                                      style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          color: Color(0xFF965D1A),
+                                          fontWeight: FontWeight.bold)),
+                                ),
+                              ],
+                            ));
                   }
                 },
-              ),
+              ),*/
               const SizedBox(
                 height: 30,
               ),
@@ -284,11 +422,16 @@ class _FormState extends State<AddBrands> {
                 ),
                 onPressed: () {
                   if (_updatedNameController.text.isNotEmpty) {
-                    _brandApiCall.updateBrand(
-                        BrandModel(
-                            name: _updatedNameController.text,
-                            products: [_prodController.text]),
-                        _updatedIdController.text);
+                    updateBrand(
+                            BrandModel(
+                                name: _updatedNameController.text,
+                                products: [_prodController.text]),
+                            _updatedIdController.text)
+                        .whenComplete(() => Fluttertoast.showToast(
+                              msg: message,
+                              toastLength: Toast.LENGTH_SHORT,
+                              backgroundColor: Colors.black.withOpacity(0.7),
+                            ));
                   }
                 },
               ),

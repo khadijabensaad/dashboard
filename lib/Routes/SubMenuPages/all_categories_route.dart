@@ -1,63 +1,14 @@
-/*import 'package:admintest/Controllers/CRUDControllers/category_api.dart';
-import 'package:admintest/Models/CRUDModels/categories_model.dart';
-import 'package:admintest/Widgets/appbarwideget.dart';
-import 'package:admintest/constants/const_colors.dart';
-import 'package:flutter/material.dart';
-
-class CategoriesRoute extends StatelessWidget {
-  CategoriesRoute({super.key});
-
-  final GetCategoryApiCall categoryApiCall = GetCategoryApiCall();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar:const AppBarWidget(title: "All Categories"),
-      body: FutureBuilder<List<CategoryModel>>(
-        future: categoryApiCall.getAllCategories(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return ListView.builder(
-              itemCount: snapshot.data!.length,
-              itemBuilder: (context, index) => Container(
-                color: backgoundColor,
-                child: Column(
-                  children: [
-                    /* Image.network(
-                      "http://192.168.0.179:5000/images/${snapshot.data![index].thumbnail}",
-                      width: 150,
-                    ),*/
-                    ListTile(
-                      title: Text(snapshot.data![index].name),
-                      subtitle: Text(snapshot.data![index].id),
-                    ),
-                    Container(
-                      height: 8,
-                      color: Colors.white,
-                    ),
-                  ],
-                ),
-              ),
-            );
-          } else {
-            return const Center(
-              child: CircularProgressIndicator(), // Display loading indicator
-            );
-          }
-        },
-      ),
-    );
-  }
-}
-*/
+import 'dart:convert';
+import 'package:flutter/cupertino.dart';
+import 'package:http/http.dart' as http;
 import 'package:admintest/Controllers/CRUDControllers/category_api.dart';
 import 'package:admintest/Models/CRUDModels/categories_model.dart';
 import 'package:admintest/Widgets/appbarwideget.dart';
 import 'package:admintest/constants/const_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 import '../../Widgets/CRUDWidgets/add_category_page.dart';
-import '../../Widgets/header_widget.dart';
 
 class CategoriesRoute extends StatefulWidget {
   CategoriesRoute({super.key});
@@ -68,7 +19,7 @@ class CategoriesRoute extends StatefulWidget {
 
 class _CategoriesRouteState extends State<CategoriesRoute> {
   final CategoryApiCall categoryApiCall = CategoryApiCall();
-
+  String message = '';
   TextEditingController _searchController = TextEditingController();
 
   String minimizeTitle(String title) {
@@ -88,6 +39,30 @@ class _CategoriesRouteState extends State<CategoriesRoute> {
     super.dispose();
   }
 
+  Future<void> deleteCategory(String id) async {
+    try {
+      //na7ina il const khater l'id variable
+      String url = "http://192.168.1.113:5000/categories/deleteCategory/${id}";
+      final resp = await http.delete(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8'
+        },
+      );
+      if (resp.statusCode == 200) {
+        print("succes category deleted");
+        var jsonResponse = jsonDecode(resp.body);
+        setState(() {
+          message = jsonResponse;
+        });
+      } else {
+        print("failed");
+      }
+    } catch (e) {
+      print("echec: ${e}");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -97,9 +72,8 @@ class _CategoriesRouteState extends State<CategoriesRoute> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Column(
           children: [
-            HeaderWidget(scaffoldContext: context, cntrl: _searchController),
-            const SizedBox(height: 10),
-            const SizedBox(height: 7),
+            // HeaderWidget(scaffoldContext: context, cntrl: _searchController),
+            const SizedBox(height: 20),
             Expanded(
               child: FutureBuilder<List<CategoryModel>>(
                 future: categoryApiCall.getAllCategories(),
@@ -113,7 +87,7 @@ class _CategoriesRouteState extends State<CategoriesRoute> {
                       itemBuilder: (context, index) {
                         return InkWell(
                           onTap: () {
-                            // Get.to(() => ProductDetails(
+                            // Get.to(() => ProductDetailss(
                             //   product: snapshot.data!,
                             //   index: index,
                             //   currencySign: '',
@@ -133,7 +107,7 @@ class _CategoriesRouteState extends State<CategoriesRoute> {
                                   ),
                                   child: Image.network(
                                     // snapshot.data![index].thumbnail,
-                                    "http://192.168.0.179:5000/shops/getAllShops/${snapshot.data![index].coordinates}",
+                                    "http://192.168.1.113:5000/shops/getAllShops/${snapshot.data![index].coordinates}",
                                     height: 100,
                                     width: 110,
                                     fit: BoxFit.fill,
@@ -190,16 +164,101 @@ class _CategoriesRouteState extends State<CategoriesRoute> {
                                     ),
                                   ),
                                 ),
-                                Container(
-                                  width: 37,
-                                  height: 37,
-                                  child: Icon(
-                                    Icons.category_outlined,
-                                    color: Colors.white,
-                                  ),
-                                  decoration: const ShapeDecoration(
-                                    color: orange,
-                                    shape: CircleBorder(),
+                                InkWell(
+                                  onTap: () {
+                                    String? id = snapshot.data![index].id;
+                                    if (id != null) {
+                                      showDialog(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                                icon: const Icon(
+                                                    Icons.warning_amber_rounded,
+                                                    size: 50),
+                                                iconColor: Color(0xFF965D1A),
+                                                backgroundColor:
+                                                    Color(0xFFFDF1E1),
+                                                title: const Text(
+                                                  'Delete All Categories',
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontFamily: 'Poppins',
+                                                      color: Colors.black,
+                                                      fontSize: 20),
+                                                ),
+                                                content: const Text(
+                                                  'If you delete this category, you will delete all its products!!!',
+                                                  style: TextStyle(
+                                                      fontFamily: 'Poppins',
+                                                      color: Colors.red,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                                actions: <Widget>[
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      Navigator.of(context)
+                                                          .pop();
+
+                                                      // Close the dialog after deletion
+                                                    },
+                                                    child: const Text('Cancel',
+                                                        style: TextStyle(
+                                                            fontFamily:
+                                                                'Poppins',
+                                                            color: Color(
+                                                                0xFF965D1A),
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold)),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () async {
+                                                      setState(() {
+                                                        deleteCategory(id)
+                                                            .whenComplete(() =>
+                                                                Fluttertoast
+                                                                    .showToast(
+                                                                  msg: message,
+                                                                  toastLength: Toast
+                                                                      .LENGTH_SHORT,
+                                                                  backgroundColor: Colors
+                                                                      .black
+                                                                      .withOpacity(
+                                                                          0.7),
+                                                                ));
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      });
+                                                      // Close the dialog after deletion
+                                                    },
+                                                    child: const Text('Delete',
+                                                        style: TextStyle(
+                                                            fontFamily:
+                                                                'Poppins',
+                                                            color: Color(
+                                                                0xFF965D1A),
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold)),
+                                                  ),
+                                                ],
+                                              ));
+                                    } else {
+                                      print("No Category id");
+                                    }
+                                  },
+                                  child: Container(
+                                    width: 37,
+                                    height: 37,
+                                    child: Icon(
+                                      CupertinoIcons.delete,
+                                      color: Colors.white,
+                                    ),
+                                    decoration: const ShapeDecoration(
+                                      color: orange,
+                                      shape: CircleBorder(),
+                                    ),
                                   ),
                                 ),
                               ],
@@ -242,7 +301,7 @@ class _CategoriesRouteState extends State<CategoriesRoute> {
                   shape: CircleBorder(),
                 ),
               ),
-            ),
+            )
           ],
         ),
       ),

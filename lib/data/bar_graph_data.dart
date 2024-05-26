@@ -7,7 +7,7 @@ class BarGraphData {
   final data = [
     const BarGraphModel(
       color: orange,
-      label: "Total searches",
+      label: "Searches",
       graph: [
         GraphModel(x: 0, y: 8),
         GraphModel(x: 1, y: 10),
@@ -19,7 +19,7 @@ class BarGraphData {
     ),
     BarGraphModel(
       color: Colors.teal.shade100,
-      label: "Total reviews",
+      label: "Users",
       graph: [
         const GraphModel(x: 0, y: 4),
         const GraphModel(x: 1, y: 10),
@@ -31,7 +31,7 @@ class BarGraphData {
     ),
     BarGraphModel(
       color: Colors.green.shade200,
-      label: "Total reviews",
+      label: "Deals",
       graph: [
         const GraphModel(x: 0, y: 4),
         const GraphModel(x: 1, y: 10),

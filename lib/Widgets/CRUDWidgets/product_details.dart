@@ -1,4 +1,4 @@
-import 'package:admintest/constants/const_colors.dart';
+/*import 'package:admintest/constants/const_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:readmore/readmore.dart';
 import '../../Controllers/CRUDControllers/products_api.dart';
@@ -72,7 +72,7 @@ class ProductDetails extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(10),
                                 child: Image.network(
                                   // snapshot.data![index].thumbnail,
-                                  "http://192.168.0.179:5000/images/${product.thumbnail}",
+                                  "http://192.168.1.113:5000/images/${product.thumbnail}",
                                   height: 100,
                                   width: 110,
                                   fit: BoxFit.fill,
@@ -98,7 +98,7 @@ class ProductDetails extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(10),
                                 child: Image.network(
                                   // snapshot.data![index].thumbnail,
-                                  "http://192.168.0.179:5000/images/${product.thumbnail}",
+                                  "http://192.168.1.113:5000/images/${product.thumbnail}",
                                   height: 100,
                                   width: 110,
                                   fit: BoxFit.fill,
@@ -146,7 +146,7 @@ class ProductDetails extends StatelessWidget {
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(8),
                                       child: Image.network(
-                                        "http://192.168.0.179:5000/images/${product.images[indeximg]}",
+                                        "http://192.168.1.113:5000/images/${product.images[indeximg]}",
                                         //   product.images[indeximg],
                                         width: 80,
                                         fit: BoxFit.fill,
@@ -193,7 +193,7 @@ class ProductDetails extends StatelessWidget {
                         IconButton(
                             icon: const Icon(
                               Icons.star_rate_rounded,
-                              color: Color(0xFFFFBD59),
+                              color: orange,
                             ),
                             onPressed:
                                 () {} // Get.to(() => const ReviewsPage()),
@@ -283,7 +283,7 @@ class ProductDetails extends StatelessWidget {
                               color: Colors.white,
                             ),
                             decoration: const ShapeDecoration(
-                              color: Color(0xFFFFBD59),
+                              color: orange,
                               shape: CircleBorder(),
                             ),
                           ),
@@ -310,59 +310,120 @@ class ProductDetails extends StatelessWidget {
       ),
     );
   }
-}
-/*
+}*/
+
+import 'package:admintest/Routes/SubMenuPages/all_products_routes.dart';
 import 'package:admintest/Widgets/side_menu_resp.dart';
 import 'package:admintest/constants/const_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:readmore/readmore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../Controllers/CRUDControllers/osm_map.dart';
 import '../../Controllers/CRUDControllers/products_api.dart';
 import '../../Models/CRUDModels/product_data_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../Helpers/colors_help.dart';
+import '../../util/responsive_ui.dart';
 
-class ProductDetail extends StatefulWidget {
-  ProductDetail({
+class ProductDetails extends StatefulWidget {
+  final ProductModel product;
+  final int index;
+  final String currencySign, price;
+  final bool isLarge;
+  final bool lineThrough;
+
+  const ProductDetails({
     super.key,
-    required this.identifier,
     required this.product,
     required this.index,
     this.isLarge = false,
     this.lineThrough = false,
     required this.currencySign,
     required this.price,
+    required String identifier,
   });
-  final String identifier;
-  final ProductModel product;
-  final int index;
-  final String currencySign, price;
-  final bool isLarge;
-  final bool lineThrough;
+
+  @override
+  State<ProductDetails> createState() => _ProductDetailsState();
+}
+
+class _ProductDetailsState extends State<ProductDetails> {
   final ProductApiCall productIdApiCall = ProductApiCall();
 
-  String minimizeTitle(String title) {
-    List<String> words = title.split(' ');
-    return words.take(2).join(' ');
+  final ProductApiCall _productApiCall = ProductApiCall();
+
+  //HelperFunctions _helperFunctions = HelperFunctions();
+
+  String id = "";
+  late SharedPreferences prefs;
+  late var token = "";
+  String message = '';
+
+  bool _favoriteTapped = false;
+
+  /*final ProductModel products = ProductModel(
+      id: '',
+      name: '',
+      price: 0,
+      rating: 0,
+      barcode: 0,
+      thumbnail: '',
+      images: [],
+      colors: [],
+      description: '',
+      size: [],
+      brand: '',
+      shops: [],
+      category: [],
+      v: 0);*/
+  @override
+  void initState() {
+    // TODO: implement initState
+    initSharedPref().then((_) {
+      setState(() {
+        token = prefs.getString("userToken")!;
+      });
+    });
+    super.initState();
+  }
+
+  Future<void> initSharedPref() async {
+    prefs = await SharedPreferences.getInstance();
   }
 
   @override
-  State<ProductDetail> createState() => _ProductDetailState();
-}
-
-class _ProductDetailState extends State<ProductDetail> {
-  final ProductApiCall _productApiCall = ProductApiCall();
-  //HelperFunctions _helperFunctions = HelperFunctions();
-  final HelperFunctions _helperFunctions = HelperFunctions();
-  String id = "";
-  int barcode = 0;
-  bool _favoriteTapped = false;
-  late ProductModel product;
-
-  @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveUI.isDesktop(context);
+    final isTablet = ResponsiveUI.isTablet(context);
+
     return Scaffold(
+        appBar: AppBar(
+          backgroundColor: const Color(0xFFFDF1E1),
+          leading: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: const Icon(CupertinoIcons.arrow_left),
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => const AllProductsRouter()),
+                  );
+                },
+              ),
+            ],
+          ),
+          title: const Text(
+            "Product Details",
+            style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Poppins',
+                color: Colors.black),
+          ),
+          centerTitle: true,
+        ),
         backgroundColor: backgoundColor,
         drawer: const SideMenu(),
         body: SafeArea(
@@ -373,51 +434,23 @@ class _ProductDetailState extends State<ProductDetail> {
             const SizedBox(
               height: 20,
             ),
-            /*
-              Container(
-                width: double.infinity,
-                height: MediaQuery.of(context).size.height / 2.8,
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color.fromARGB(255, 220, 198, 170)
-                          .withOpacity(0.5),
-                      spreadRadius: 2,
-                      blurRadius: 3,
-                      offset: const Offset(0, 0),
-                    ),
-                  ],
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: 
-                         InkWell(child: Image.asset("assets/images/profile2.jpg",fit: BoxFit.fill,),
-                         onTap: () {
-                           print("Detail page:  ${widget.identifier}");
-                         },)
-                                          
-              ),
-              ),*/
-            FutureBuilder<ProductModel>(
-              future: _productApiCall.getProductById(product.id),
+            FutureBuilder<ProductModel?>(
+              future: _productApiCall.getProductById(widget.product.id),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 } else if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 } else if (snapshot.hasData) {
-                  //List<String> images = snapshot.data!.images;
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        height: MediaQuery.of(context).size.height / 2.8,
+                        height: MediaQuery.of(context).size.height * 0.5,
                         width: MediaQuery.of(context).size.width,
                         child: ListView.separated(
                           separatorBuilder: (context, index) => const SizedBox(
-                            width: 5,
+                            width: 10,
                           ),
                           scrollDirection: Axis.horizontal,
                           itemCount: snapshot.data!.images.length,
@@ -441,14 +474,31 @@ class _ProductDetailState extends State<ProductDetail> {
                               ],
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Image.network(
-                                  "http://192.168.1.15:5000/images/${snapshot.data?.images[index]}",
-                                  fit: BoxFit.fill,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.85,
-                                )),
+                            child: !(isDesktop || isTablet)
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: Image.network(
+                                      "${snapshot.data?.images[index]}",
+                                      fit: BoxFit.fill,
+                                      height:
+                                          MediaQuery.of(context).size.height *
+                                              0.4,
+                                      width: MediaQuery.of(context).size.width *
+                                          0.75,
+                                    ),
+                                  )
+                                : ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: Image.network(
+                                      "${snapshot.data?.images[index]}",
+                                      fit: BoxFit.fill,
+                                      height:
+                                          MediaQuery.of(context).size.height *
+                                              0.95,
+                                      width: MediaQuery.of(context).size.width *
+                                          0.22,
+                                    ),
+                                  ),
                           ),
                         ),
                       ),
@@ -470,13 +520,13 @@ class _ProductDetailState extends State<ProductDetail> {
                           IconButton(
                               icon: const Icon(
                                 Icons.star_rate_rounded,
-                                color: Color(0xFFFFBD59),
+                                color: orange,
                               ),
                               onPressed: () {}),
                           Text(
                             "${snapshot.data?.rating}",
                             style: const TextStyle(
-                                color: Color(0xFFFFBD59),
+                                color: orange,
                                 fontFamily: 'Poppins',
                                 fontSize: 16),
                           ),
@@ -515,9 +565,10 @@ class _ProductDetailState extends State<ProductDetail> {
                                 },
                                 icon: Icon(
                                   CupertinoIcons.heart_fill,
-                                  color: _favoriteTapped
+                                  color: /*_favoriteTapped
                                       ? Colors.red
-                                      : Colors.black26,
+                                      :*/
+                                      Colors.black26,
                                 ))
                           ],
                         ),
@@ -526,10 +577,10 @@ class _ProductDetailState extends State<ProductDetail> {
                         padding: const EdgeInsets.symmetric(vertical: 5.0),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Color.fromARGB(255, 255, 220, 169),
+                            color: boxColor,
                             boxShadow: [
                               BoxShadow(
-                                color: Color.fromARGB(255, 161, 155, 146)
+                                color: const Color.fromARGB(255, 161, 155, 146)
                                     .withOpacity(0.3),
                                 spreadRadius: 2,
                                 blurRadius: 3,
@@ -594,30 +645,6 @@ class _ProductDetailState extends State<ProductDetail> {
                                             ),
                                           ],
                                         ),
-                                        /*
-                                        const Row(children: [
-                                          Text(
-                                            "Stock:",
-                                            style: TextStyle(
-                                              color: Colors.black,
-                                              fontSize: 10,
-                                              fontFamily: 'Poppins',
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                          SizedBox(
-                                            width: 6,
-                                          ),
-                                          Text(
-                                            "In Stock",
-                                            style: TextStyle(
-                                              color: Colors.black,
-                                              fontSize: 13,
-                                              fontFamily: 'Poppins',
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                        ]),*/
                                       ]),
                                 ]),
                               ],
@@ -891,6 +918,3 @@ class _ProductDetailState extends State<ProductDetail> {
         ))));
   }
 }
-
-mixin HelperFunctions {}
-*/
